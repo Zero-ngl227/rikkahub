@@ -57,7 +57,7 @@ fun RibbonBackdrop(visible: Boolean = true, modifier: Modifier = Modifier) {
  * 顶栏自己会垫一层状态栏高度，所以要减掉，不然会重复让位、出现一道大空白。
  */
 @Composable
-fun ribbonContentPadding(visible: Boolean): PaddingValues {
+fun ribbonContentPadding(visible: Boolean = true): PaddingValues {
     if (!visible) return PaddingValues(0.dp)
     val statusBar = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
