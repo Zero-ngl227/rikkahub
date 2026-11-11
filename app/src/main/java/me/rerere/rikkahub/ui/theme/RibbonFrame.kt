@@ -21,7 +21,7 @@ import androidx.compose.ui.zIndex
 import me.rerere.rikkahub.R
 
 /** 顶部框边高度。设成 0.dp 就完全不画 */
-val RibbonTopHeight: Dp = 96.dp
+val RibbonTopHeight: Dp = 30.dp
 
 /** 底部框边高度。设成 0.dp 就完全不画 */
 val RibbonBottomHeight: Dp = 0.dp
