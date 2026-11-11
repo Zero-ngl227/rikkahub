@@ -333,11 +333,7 @@ class RouteActivity : ComponentActivity() {
                             rememberSaveableStateHolderNavEntryDecorator(),
                             rememberViewModelStoreNavEntryDecorator(),
                         ),
-                                                                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(ribbonContentPadding()),
-                            .fillMaxSize()
-                            .padding(ribbonContentPadding(backStack.lastOrNull() is Screen.Chat)),
+                            modifier = Modifier.fillMaxSize(),
                         // 同一帧内连续两次返回时 NavDisplay 的返回状态还没更新，会多回调一次，不加判断会把栈弹空
                         onBack = { if (backStack.size > 1) backStack.removeLastOrNull() },
                         transitionSpec = {
