@@ -57,21 +57,19 @@ private fun RibbonEdge(height: Dp, isTop: Boolean) {
         )
         Box(
             Modifier.matchParentSize().background(
-                Brush.verticalGradient(
-                    if (isTop) {
-                        arrayOf(
-                            0f to Color.Transparent,
-                            0.5f to Color.Transparent,
-                            1f to MaterialTheme.colorScheme.background
-                        )
-                    } else {
-                        arrayOf(
-                            0f to MaterialTheme.colorScheme.background,
-                            0.5f to Color.Transparent,
-                            1f to Color.Transparent
-                        )
-                    }
-                )
+                if (isTop) {
+                    Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        0.5f to Color.Transparent,
+                        1f to MaterialTheme.colorScheme.background
+                    )
+                } else {
+                    Brush.verticalGradient(
+                        0f to MaterialTheme.colorScheme.background,
+                        0.5f to Color.Transparent,
+                        1f to Color.Transparent
+                    )
+                }
             )
         )
     }
