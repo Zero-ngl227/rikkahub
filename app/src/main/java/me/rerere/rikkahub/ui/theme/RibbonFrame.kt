@@ -21,12 +21,12 @@ import androidx.compose.ui.zIndex
 import me.rerere.rikkahub.R
 
 /** 顶部框边高度。设成 0.dp 就完全不画 */
-val RibbonTopHeight: Dp = 68.dp
+val RibbonTopHeight: Dp = 56.dp
 
 /** 底部框边高度。设成 0.dp 就完全不画 */
 val RibbonBottomHeight: Dp = 0.dp
 
-private const val RIBBON_EDGE_ALPHA = 0.55f
+private const val RIBBON_EDGE_ALPHA = 0.5f
 
 @Composable
 fun RibbonBackdrop(modifier: Modifier = Modifier) {
@@ -60,13 +60,13 @@ private fun RibbonEdge(height: Dp, isTop: Boolean) {
                 if (isTop) {
                     Brush.verticalGradient(
                         0f to Color.Transparent,
-                        0.42f to Color.Transparent,
+                        0.55f to Color.Transparent,
                         1f to MaterialTheme.colorScheme.background
                     )
                 } else {
                     Brush.verticalGradient(
                         0f to MaterialTheme.colorScheme.background,
-                        0.42f to Color.Transparent,
+                        0.55f to Color.Transparent,
                         1f to Color.Transparent
                     )
                 }
