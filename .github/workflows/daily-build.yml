@@ -1,14 +1,11 @@
 name: Daily Build
 
 on:
-  # 每天 UTC 09:00、18:00 触发（北京时间 17:00、次日 02:00）
   schedule:
     - cron: '0 9,18 * * *'
-  # 也支持手动触发
   workflow_dispatch:
 
 jobs:
-  # 检查过去 24 小时内是否有新提交，没有则跳过构建，避免重复打包
   check:
     runs-on: ubuntu-latest
     outputs:
@@ -18,12 +15,10 @@ jobs:
       - name: Check for recent commits
         id: check
         run: |
-          # 手动触发时无条件构建
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "should_build=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # 定时触发：仅当过去 24 小时内有新提交才构建
           if [ -n "$(git log --since='24 hours ago' --oneline)" ]; then
             echo "should_build=true" >> "$GITHUB_OUTPUT"
           else
@@ -35,25 +30,20 @@ jobs:
     needs: check
     if: needs.check.outputs.should_build == 'true'
     runs-on: ubuntu-latest
-    permissions:
-      contents: write   # 发布 Release 需要写权限
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 与 Android Studio 自带的 JetBrains Runtime 21 保持一致
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'jetbrains'
           java-version: '21'
         env:
-          # jetbrains 安装器通过 GitHub API 查询版本，带上 token 避免被限流
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # web 模块的 preBuild 会执行 `pnpm run build` 构建前端，必须准备好 Node + pnpm
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -66,7 +56,6 @@ jobs:
           cache: pnpm
           cache-dependency-path: web-ui/pnpm-lock.yaml
 
-      # gradle 的 buildWebUi 任务只跑 build 不跑 install，需在此提前安装依赖
       - name: Install web-ui dependencies
         working-directory: web-ui
         run: pnpm install --frozen-lockfile
@@ -79,35 +68,78 @@ jobs:
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
 
-      - name: Prepare build files
+      - name: Prepare signing files
         run: |
-          # 解码base64编码的keystore文件
-          echo "${{ secrets.KEY_BASE64 }}" | base64 -d > app/app.key
+          if [ -n "${{ secrets.KEY_BASE64 }}" ]; then
+            echo "${{ secrets.KEY_BASE64 }}" | base64 -d > app/app.key
+            echo "${{ secrets.SIGNING_CONFIG }}" > local.properties
+            echo "已写入签名配置"
+          else
+            echo "没有签名密钥，调试版将使用自动生成的调试签名"
+          fi
 
-          # 写入签名配置到local.properties
-          echo "${{ secrets.SIGNING_CONFIG }}" > local.properties
-
-          # 写入Google Services配置
-          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+      - name: Write placeholder Firebase config
+        run: |
+          if [ -z "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
+            cat > app/google-services.json <<'JSON'
+          {
+            "project_info": {
+              "project_number": "123456789000",
+              "project_id": "rikkahub-fork",
+              "storage_bucket": "rikkahub-fork.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:123456789000:android:0123456789abcdef",
+                  "android_client_info": {
+                    "package_name": "me.rerere.rikkahub"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [
+                  { "current_key": "AIzaSyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" }
+                ],
+                "services": {
+                  "appinvite_service": {
+                    "other_platform_oauth_client": []
+                  }
+                }
+              },
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:123456789000:android:0123456789abcdee",
+                  "android_client_info": {
+                    "package_name": "me.rerere.rikkahub.debug"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [
+                  { "current_key": "AIzaSyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" }
+                ],
+                "services": {
+                  "appinvite_service": {
+                    "other_platform_oauth_client": []
+                  }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          JSON
+            echo "已写入占位 Firebase 配置"
+          else
+            echo "使用仓库自带 Firebase 配置"
+          fi
 
       - name: Gradle Build
         run: |
           chmod +x gradlew
-          ./gradlew assembleGithubRelease
+          ./gradlew assembleGithubDebug
 
-      # 把 APK 直接发布为 Prerelease，用户点链接即可下载单个 apk，无需登录、无需解压
-      - name: Publish nightly prerelease
-        uses: softprops/action-gh-release@v2
-        if: success()
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: nightly            # 固定 tag，每晚覆盖同一个「最新每日构建」
-          name: Nightly Build
-          prerelease: true
-          body: |
-            自动每日构建（commit `${{ github.sha }}`）
-
-            > ⚠️ 开发版本，可能不稳定，仅供测试。
-          # mapping.txt 用于还原混淆后的崩溃堆栈，所有 ABI 的 APK 共用这一份
-          files: |
-            app/build/outputs/apk/github/release/*.apk
-            app/build/outputs/mapping/githubRelease/mapping.txt
+          name: rikkahub-ribbon-debug
+          path: app/build/outputs/apk/github/debug/*.apk
+          if-no-files-found: error
