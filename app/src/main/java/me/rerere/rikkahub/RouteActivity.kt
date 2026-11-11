@@ -327,14 +327,16 @@ class RouteActivity : ComponentActivity() {
                         .semantics { testTagsAsResourceId = true }
                         .background(MaterialTheme.colorScheme.background)
             ) {
-                    RibbonBackdrop()
+                    RibbonBackdrop(visible = backStack.lastOrNull() is Screen.Chat)
                     NavDisplay(
                         backStack = backStack,
                         entryDecorators = listOf(
                             rememberSaveableStateHolderNavEntryDecorator(),
                             rememberViewModelStoreNavEntryDecorator(),
                         ),
-                        modifier = Modifier.fillMaxSize(),
+                                                modifier = Modifier
+                            .fillMaxSize()
+                            .padding(ribbonContentPadding(backStack.lastOrNull() is Screen.Chat)),
                         // 同一帧内连续两次返回时 NavDisplay 的返回状态还没更新，会多回调一次，不加判断会把栈弹空
                         onBack = { if (backStack.size > 1) backStack.removeLastOrNull() },
                         transitionSpec = {
