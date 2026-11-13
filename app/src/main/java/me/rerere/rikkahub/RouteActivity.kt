@@ -352,11 +352,12 @@ class RouteActivity : ComponentActivity() {
                             slideInHorizontally { -it / 2 } + scaleIn(initialScale = 0.7f) + fadeIn() togetherWith
                                 slideOutHorizontally { it }
                         },
-                        entryProvider = entryProvider {
+                                                entryProvider = entryProvider {
                             entry<Screen.Chat>(
                                 metadata = NavDisplay.transitionSpec { fadeIn() togetherWith fadeOut() }
                                     + NavDisplay.popTransitionSpec { fadeIn() togetherWith fadeOut() }
                             ) { key ->
+                                LaunchedEffect(key.id) { ProactivePushManager.markActive(this@RouteActivity, key.id) }
                                 ChatPage(
                                     id = Uuid.parse(key.id),
                                     text = key.text,
