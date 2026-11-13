@@ -81,7 +81,7 @@ class RikkaHubApp : Application() {
             workManagerFactory()
             modules(appModule, viewModelModule, dataSourceModule, repositoryModule)
         }
-        this.createNotificationChannel()
+        ProactivePushManager.createNotificationChannel(this)
 
         // set cursor window size to 32MB
         DatabaseUtil.setCursorWindowSize(32 * 1024 * 1024)
