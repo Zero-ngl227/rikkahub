@@ -1,5 +1,6 @@
 package me.rerere.rikkahub
 
+import me.rerere.rikkahub.service.ProactivePushManager
 import android.app.Application
 import android.content.Intent
 import android.content.pm.PackageManager
