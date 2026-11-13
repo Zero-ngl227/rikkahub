@@ -1,6 +1,7 @@
 package me.rerere.rikkahub
 
 import android.annotation.SuppressLint
+import me.rerere.rikkahub.service.ProactivePushManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
