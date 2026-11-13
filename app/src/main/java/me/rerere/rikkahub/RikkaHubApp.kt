@@ -1,6 +1,5 @@
 package me.rerere.rikkahub
 
-import me.rerere.rikkahub.service.ProactivePushManager
 import android.app.Application
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -40,6 +39,7 @@ import me.rerere.rikkahub.di.dataSourceModule
 import me.rerere.rikkahub.di.repositoryModule
 import me.rerere.rikkahub.di.viewModelModule
 import me.rerere.rikkahub.service.MediaCreationService
+import me.rerere.rikkahub.service.ProactivePushManager
 import me.rerere.rikkahub.service.WebServerService
 import me.rerere.rikkahub.utils.CrashHandler
 import me.rerere.rikkahub.utils.DatabaseUtil
@@ -81,7 +81,7 @@ class RikkaHubApp : Application() {
             workManagerFactory()
             modules(appModule, viewModelModule, dataSourceModule, repositoryModule)
         }
-        ProactivePushManager.createNotificationChannel(this)
+        this.createNotificationChannel()
 
         // set cursor window size to 32MB
         DatabaseUtil.setCursorWindowSize(32 * 1024 * 1024)
@@ -138,10 +138,10 @@ class RikkaHubApp : Application() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(
             LifecycleEventObserver { _, event ->
                 if (event == Lifecycle.Event.ON_STOP) {
-    get<MemoryConsolidationScheduler>().onAppHidden()
-    ProactivePushManager.markActive(this@RikkaHubApp)
+                    get<MemoryConsolidationScheduler>().onAppHidden()
+                    ProactivePushManager.markActive(this@RikkaHubApp)
                 }
-            
+            }
         )
         get<AppScope>().launch(Dispatchers.IO) {
             runCatching {
