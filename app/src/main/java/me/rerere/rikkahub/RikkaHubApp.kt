@@ -137,8 +137,11 @@ class RikkaHubApp : Application() {
         // 应用被切走后进程随时可能被冻结，等不到空闲计时结束，这时直接开始整理
         ProcessLifecycleOwner.get().lifecycle.addObserver(
             LifecycleEventObserver { _, event ->
-                if (event == Lifecycle.Event.ON_STOP) get<MemoryConsolidationScheduler>().onAppHidden()
-            }
+                if (event == Lifecycle.Event.ON_STOP) {
+    get<MemoryConsolidationScheduler>().onAppHidden()
+    ProactivePushManager.markActive(this@RikkaHubApp)
+                }
+            
         )
         get<AppScope>().launch(Dispatchers.IO) {
             runCatching {
